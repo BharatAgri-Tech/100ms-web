@@ -1,8 +1,7 @@
 import React, { useContext, useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useSearchParam } from "react-use";
-import { v4 } from "uuid";
-import { Box, Flex, Loading, styled } from "@100mslive/react-ui";
+import { useLocalStorage, useSearchParam } from "react-use";
+import { Box, Flex, Loading, styled, Text } from "@100mslive/react-ui";
 import Preview from "./Preview";
 import { Header } from "./Header";
 import { ErrorDialog } from "../primitives/DialogContent";
@@ -11,8 +10,8 @@ import {
   QUERY_PARAM_SKIP_PREVIEW_HEADFUL,
   QUERY_PARAM_NAME,
   QUERY_PARAM_SKIP_PREVIEW,
-  QUERY_PARAM_AUTH_TOKEN,
   UI_SETTINGS,
+  QUERY_PARAM_USER_ID,
 } from "../common/constants";
 import getToken from "../services/tokenService";
 import { useSetUiSettings } from "./AppData/useUISettings";
@@ -47,24 +46,22 @@ const PreviewScreen = React.memo(({ getUserToken }) => {
   skipPreview = skipPreview || beamInToken || directJoinHeadful;
   const initialName =
     useSearchParam(QUERY_PARAM_NAME) || (skipPreview ? "Beam" : "");
-  let authToken = useSearchParam(QUERY_PARAM_AUTH_TOKEN);
+  const [localUserId, setLocalUserId] = useLocalStorage("userId");
+  let userId = useSearchParam(QUERY_PARAM_USER_ID) || localUserId;
 
   useEffect(() => {
-    if (authToken) {
-      setToken(authToken);
+    if (!userId) {
       return;
     }
-    const getTokenFn = !userRole
-      ? () => getUserToken(v4())
-      : () => getToken(tokenEndpoint, v4(), userRole, urlRoomId);
-    getTokenFn()
+    setLocalUserId(userId);
+    getToken(tokenEndpoint, userId, userRole, urlRoomId)
       .then(token => {
         setToken(token);
       })
       .catch(error => {
         setError(convertPreviewError(error));
       });
-  }, [tokenEndpoint, urlRoomId, getUserToken, userRole, authToken]);
+  }, [tokenEndpoint, urlRoomId, userRole, userId]);
 
   const onJoin = () => {
     !directJoinHeadful && setIsHeadless(skipPreview);
@@ -95,7 +92,8 @@ const PreviewScreen = React.memo(({ getUserToken }) => {
             />
           </>
         ) : (
-          <Loading size={100} />
+          <Text>pls add user Id</Text>
+          // <Loading size={100} />
         )}
       </Flex>
     </Flex>
