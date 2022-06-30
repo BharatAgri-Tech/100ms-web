@@ -38,7 +38,8 @@
     "start": "webpack serve",
     "esbuild": "node ../../scripts/build-webapp",
     "dev": "node ../../scripts/dev-webapp",
-    "format": "prettier -w src"
+    "format": "prettier -w src",
+    "deploy": "webpack --node-env production && aws s3 cp build s3://100ms.leanagri.com --recursive --acl public-read && aws cloudfront create-invalidation --distribution-id E3H7M2P3R29LVW --paths '/*'"
   },
   "browserslist": {
     "production": [
